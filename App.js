@@ -1,31 +1,79 @@
-import React from 'react'
+import React, { Component } from 'react'
 
-const TestView = props => (
-  <div>{props.value}</div>
-)
-
-class TestForm extends React.component {
-  constructor (props) {
-      super(props)
-      this.state = {value:''}
-  }
-  handlChange (event) {
-      this.setState({ value: event.target.value})
-  }
-  render () {
-    return (
-        <form action=''>
-            <input type='text' />
-            <input type='submit' />
-            </form>
-    )
-  }
-}
-export class App extends React.Component {
+export default class ZipInput extends Component {
   constructor (props) {
     super(props)
-    this.state = { value: '' }
+    const v = this.props.value ? this.props.value : ''
+    // 状態を初期化
+    this.state = {
+      value: v,
+      isOK: this.checkValue(v)
+    }
+  }
+  //パターンが合致するか
+  checkValue (s) {
+    const zipPattern = /^\d{3}-\d{4}$/
+    return zipPattern.test(s)
+  }
+  //値がユーザーにより変更
+  handleChange (e) {
+    const v = e.target.value
+    const newValue = v.replace(/[^0-9-]+/g, '')
+    const newIsOK = this.checkValue(newValue)
+    this.setState({
+      value: newValue,
+      isOK: newIsOK
+    })
+
+    if (this.props.onChange) {
+      this.props.onChange({
+        target: this,
+        value: newValue,
+        isOK: newIsOK
+      })
+    }
+  }
+  componentWillReceiveProps (nextProps) {
+    this.setState({
+      value: nextProps.value,
+      isOK: this.checkValue(nextProps.value)
+    })
+  }
+  // 描画
+  render () {
+    const msg = this.renderStatusMessage()
+    return (
+      <div>
+        <label>
+          {' '}
+          郵便番号: <br />
+          <input
+            type='text'
+            placeholder='郵便番号を入力'
+            value={this.state.value}
+            onChange={e => this.handleChange(e)}
+          />
+          {msg}
+        </label>
+      </div>
+    )
+  }
+  renderStatusMessage () {
+    const so = {
+      margin: '8px',
+      padding: '8px',
+      color: 'white'
+    }
+    let msg = null
+    if (this.state.isOK) {
+      so.backgroundColor = 'green'
+      msg = <span style={so}>OK</span>
+    } else {
+      if (this.state.value !== '') {
+        so.backgroundColor = 'red'
+        msg = <span style={so}>NG</span>
+      }
+    }
+    return msg
   }
 }
-
-export default App
